@@ -1,0 +1,41 @@
+---
+title: "CO-OOPS"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+An R language wrapper around [CO-OPS](https://tidesandcurrents.noaa.gov/) handy [API](https://api.tidesandcurrents.noaa.gov/api/prod/). While throughput is throttled, it is an easy way to gather tide and current data including observations.
+
+> Someday we'll add access to the [metadata API](https://api.tidesandcurrents.noaa.gov/mdapi/prod/#intro)
+
+# Requirements
+
++ [R v4.2+](https://www.r-project.org/)
++ [rlang](https://CRAN.R-project.org/package=rlang)
++ [dplyr](https://CRAN.R-project.org/package=dplyr)
++ [readr](https://CRAN.R-project.org/package=readr)
++ [httr](https://CRAN.R-project.org/package=httr)
+
+# Installation
+
+```
+remotes::install_github("BigelowLab/coops")
+```
+
+# Example
+
+```{r}
+suppressPackageStartupMessages({
+  library(coops)
+  library(dplyr)
+})
+
+x = query_coops(station = "8418150", # Portland Maine
+                begin_date = as.Date("2020-01-01"),
+                end_date = as.Date("2020-12-31"),
+                product = "hourly_height")
+x
+```

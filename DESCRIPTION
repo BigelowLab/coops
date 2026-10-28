@@ -1,0 +1,18 @@
+Package: coops
+Type: Package
+Title: CO-OPS API wrapper
+Version: 0.1.0
+Author: Ben Tupper [aut, cre] <btupper@bigelow.org>
+Maintainer: Ben Tupper <btupper@bigelow.org>
+URL: https://github.com/bigelowlab/coops
+Description: A wrapper around the CO-OPS API.
+License: MIT + file LICENSE
+Encoding: UTF-8
+RoxygenNote: 7.3.2
+Depends: R (>= 4.2.0)
+Roxygen: list(markdown = TRUE)
+Imports:
+  rlang,
+  dplyr,
+  readr,
+  httr
