@@ -24,7 +24,7 @@ mean low low water "MLLW"}
 
 \item{time_zone}{chr, by default "gmt"}
 
-\item{format}{chr, by default "csv" but "json" and "xml" could be ok someday}
+\item{format}{chr, by default "csv" but "json" and "xml" are available}
 
 \item{application}{chr, user identifier, helpful if debugging}
 

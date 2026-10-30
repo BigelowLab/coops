@@ -10,7 +10,9 @@ unpack_response(x)
 \item{x}{a response variable from \code{\link[httr:GET]{httr::GET()}}}
 }
 \value{
-varies
+varies if format is "csv" then a data frame (tibble), if format is
+"xml" then xml_document is returned and if format is json a list is returned.
+If an http error is returned then NULL.
 }
 \description{
 Unpack a response

@@ -4,16 +4,21 @@
 \alias{query_coops}
 \title{Query CO-OPS for data}
 \usage{
-query_coops(station = "8418150", ...)
+query_coops(station = "8418150", ..., verbose = interactive())
 }
 \arguments{
-\item{station}{chr, the staion ID}
+\item{station}{chr, the station ID, must come before the ... arguments}
 
 \item{...}{other arguments for \code{\link[=build_query]{build_query()}}}
+
+\item{verbose}{logical, if TRUE echo the uri used, miuts come after the ... arguments}
 }
 \value{
 response data - possibly empty
 }
 \description{
-Query CO-OPS for data
+If the user requests csv output a data frame is returned, otherwise a
+list (json) or xml document (xml) is returned.  See \link{build_query} for
+details on arguments.  Note - there is no guarantee that items will be returned
+in date-time order.
 }

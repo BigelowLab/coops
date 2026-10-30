@@ -1,13 +1,21 @@
 #' Query CO-OPS for data
 #' 
+#' If the user requests csv output a data frame is returned, otherwise a
+#' list (json) or xml document (xml) is returned.  See [build_query] for 
+#' details on arguments.  Note - there is no guarantee that items will be returned
+#' in date-time order.
+#' 
 #' @export
-#' @param station chr, the staion ID
+#' @param station chr, the station ID, must come before the ... arguments
 #' @param ... other arguments for [build_query()]
+#' @param verbose logical, if TRUE echo the uri used, miuts come after the ... arguments
 #' @return response data - possibly empty
 query_coops = function(station = "8418150",
-                       ...){
+                       ...,
+                       verbose = FALSE){
   
   uri = build_query(station = station, ...)
+  if (verbose) message("query_coops uri: ", uri)
   resp = httr::GET(uri)
   unpack_response(resp)
 }
@@ -16,7 +24,9 @@ query_coops = function(station = "8418150",
 #' 
 #' @export
 #' @param x a response variable from [httr::GET()]
-#' @return varies
+#' @return varies if format is "csv" then a data frame (tibble), if format is
+#'   "xml" then xml_document is returned and if format is json a list is returned.
+#'   If an http error is returned then NULL. 
 unpack_response = function(x){
   
   r = switch(httr::http_type(x),
@@ -30,18 +40,22 @@ unpack_response = function(x){
       nms = strsplit(ss[1], ",", fixed = TRUE)[[1]] |>
         trimws(which = "both")
       if (any(grepl("Error", txt, fixed = TRUE))){
-        r = rep(NA_character_, length(nms)) |>
-          as.list() |>
-          rlang::set_names(nms) |>
-          dplyr::as_tibble() |>
-          dplyr::slice(0)
+        r =  NULL #rep(NA_character_, length(nms)) |>
+            #as.list() |>
+            #rlang::set_names(nms) |>
+            #dplyr::as_tibble() |>
+            #dplyr::slice(0)
       } else {
         r = readr::read_csv(I(txt), 
                             show_col_types = FALSE)
+        if ("Date Time" %in% colnames(r)){
+          r = dplyr::mutate(r, `Date Time` = ensure_datetime(.data$`Date Time`))
+        }
       }
       r
     },
-    stop("type not known:", httr::http_type(x)) 
+    
+    r = httr::content(x, encoding = "UTF-8")
   )
   r
 }
@@ -61,7 +75,7 @@ query_root_url = function(){
 #' @param datum chr, the tide height datum byt default relative to 
 #'   mean low low water "MLLW"
 #' @param time_zone chr, by default "gmt"
-#' @param format chr, by default "csv" but "json" and "xml" could be ok someday
+#' @param format chr, by default "csv" but "json" and "xml" are available
 #' @param application chr, user identifier, helpful if debugging
 #' @param root chr, the root query URL
 #' @return url string suitable for [httr::GET()]
