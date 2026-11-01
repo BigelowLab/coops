@@ -15,4 +15,5 @@ Imports:
   rlang,
   dplyr,
   readr,
-  httr
+  httr,
+  ggplot2

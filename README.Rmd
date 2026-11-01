@@ -25,17 +25,47 @@ An R language wrapper around [CO-OPS](https://tidesandcurrents.noaa.gov/) handy 
 remotes::install_github("BigelowLab/coops")
 ```
 
-# Example
+# Usage
 
-```{r}
+We don't provide any information on how to use the API, we simply wrap the API call in R for easy access.  Study the [API description](https://api.tidesandcurrents.noaa.gov/api/prod/) for argument options. Decoding API responses is also not handled by this package, but you can learn more about the responses [here](https://api.tidesandcurrents.noaa.gov/api/prod/responseHelp.html).
+
+We set the default response type to CSV (data frames), but for many calls you can request XML or JSON.
+
+Below is an example where request hourly tide hight for a year at the Portland Maine (8418150) tide gage. 
+
+```{r query}
 suppressPackageStartupMessages({
   library(coops)
   library(dplyr)
+  library(patchwork)
 })
 
 x = query_coops(station = "8418150", # Portland Maine
                 begin_date = as.Date("2020-01-01"),
                 end_date = as.Date("2020-12-31"),
-                product = "hourly_height")
-x
+                product = "hourly_height") |>
+  glimpse()
+```
+
+More complex data can be obtained using `station_high_low()` which requests observed and predicted high and low maximums.  Both the observed height and time of the tidal maximum (minimum) can be quite different than the predicted values. We have a function that requests both observed and predicted heights,
+
+```{r hilo}
+hilo = station_high_low(station = "8418150",
+                     begin_date = as.Date("1990-01-01"),
+                     end_Date = as.Date("2000-01-01")) |>
+  glimpse()
+```
+
+We interpolate the high/low maxima/mimima with`station_interpolate()` which examines the departure of the observed from the predicted. 
+
+```{r hilo_interp}
+interp_hilo = station_interpolate(hilo) |>
+  glimpse()
+```
+
+And a plot...
+
+```{r hilo_interp_plot}
+plot_hilo(interp_hilo) |>
+  wrap_plots(ncol = 1)
 ```

@@ -11,7 +11,7 @@ station_high_low(
   ...,
   .join = "merge",
   .sleep = 2,
-  .verbose = interactive(),
+  .verbose = FALSE,
   .tolerance = 7200
 )
 }
@@ -41,5 +41,5 @@ means +/-600 seconds (10 minutes)}
 data frame
 }
 \description{
-For a given station retrieve predicted and observed high and low
+Arguments that are not used by \code{\link[=query_coops]{query_coops()}} are prepended with a dot "."
 }

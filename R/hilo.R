@@ -1,3 +1,105 @@
+
+#' Given a set of values compute the standard summary of 
+#' \code{min, q25, median, mean, q75, max}
+#' 
+#' @export
+#' @param x numeric vector of values
+#' @param na.rm logical, if TRUE remove NA values before computing summaries
+#' @return named vector of summary values
+sixnum = function(x, probs = c(0.05, 0.1, 0.5, 0.9, 0.95), na.rm = TRUE){
+  quantnames = as_q(probs)
+  m = mean(x, na.rm = na.rm)
+  r = stats::quantile(x, probs = probs, na.rm = na.rm)
+  c(r, m) |>
+    rlang::set_names(c(quantnames, "mean"))
+}
+
+#' Format probabilities in the qNNNN string format
+#' 
+#' @export
+#' @param x num, probablities between 0-1, or formatted probabilities in the form qNNNN.
+#' @return chr for `as_q()` and num for as_prob
+as_q = function(x = c(0.05, 0.1, 0.5, 0.9, 0.95)){
+  sprintf("q%0.4i", (x * 1000) |> as.integer())
+}
+#' @rdname as_q
+#' @export
+as_prob = function(x = as_q()){
+  x = substring(x,2) |>
+    as.numeric()
+  x/1000
+}
+
+#' Retrieve the sixnum metrics for a CO-OPS high/low data frame
+#' 
+#' @export
+#' @param x data frame as per [station_interpolate()]
+#' @return a data frame with sixnums computed for value and datetime 
+#'   differences (observed - predicted)
+hilo_sixnum = function(x){
+  x |>
+    group_by(type) |>
+    group_map(
+      function(grp, key){
+        qt = sixnum(grp$dtime)
+        qv = sixnum(grp$dvalue)
+        dplyr::tibble(
+          type = key$type,
+          name = c(rep("dtime", length(qt)), rep("dvalue", length(qv))),
+          metric = c(names(qt), names(qv)),
+          value = c(qt, qv) )
+      }) |>
+    dplyr::bind_rows()
+}
+
+#' Plot a surge data set (high and low differences between obs and preds)
+#' 
+#' @export
+#' @param x data frame of high-low interpolates ala [station_interpolate()]
+#' @param probs, num vector of probabilties to identify an event
+#' @return data frame
+plot_hilo = function(x = station_interpolate(), 
+                      probs = c(0.05, 0.95)){
+  
+  my_seq = function(n){c(seq(from = 2, to = n), n)}
+  gg = x |>
+    dplyr::group_by(type) |>
+    dplyr::group_map(
+      function(grp, key){
+        ltm = hilo_sixnum(grp) |>
+          dplyr::filter(name == "dvalue",
+                        metric %in% as_q(probs)) |>
+          dplyr::mutate(prob = as_prob(.data$metric)) |>
+          dplyr::arrange(.data$prob)
+        grp = dplyr::arrange(grp, .data$obs_datetime) |>
+          dplyr::mutate(xend = .data$obs_datetime[my_seq(dplyr::n())],
+                        yend = .data$dvalue[my_seq(dplyr::n())],
+                        event = case_when(
+                          .data$dvalue <= ltm$value[1] ~ -1,
+                          .data$dvalue >= ltm$value[2] ~ 1,
+                          .default = 0) |>
+                          factor(levels = c(1,0,-1),
+                                 labels = c(">90th", "10th-90th", "<10th")))
+        ggplot2::ggplot(data = grp,
+                        mapping = ggplot2::aes(x = .data$obs_datetime,
+                                               y = .data$dvalue)) +
+          ggplot2::geom_point(mapping = ggplot2::aes(color = .data$event),
+                              size = 1, alpha = 0.3 ) + 
+          ggplot2::scale_color_manual(values = c(">90th" = "red", 
+                                                 "10th-90th" = "grey75", 
+                                                 "<10th" = "blue")) + 
+          ggplot2::theme_light() + 
+          ggplot2::theme(legend.position="none") + 
+          ggplot2::labs(y = "Obs - Pred (m)",
+                        title = c(H = "High Tide", L = "Low Tide")[grp$type[1]])
+      }, .keep = TRUE) 
+  gg
+}
+
+
+
+
+
 #' For a given station retrieve predicted and observed high and low 
 #' 
 #' Arguments that are not used by [query_coops()] are prepended with a dot "."

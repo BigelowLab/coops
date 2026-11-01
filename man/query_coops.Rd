@@ -4,7 +4,7 @@
 \alias{query_coops}
 \title{Query CO-OPS for data}
 \usage{
-query_coops(station = "8418150", ..., verbose = interactive())
+query_coops(station = "8418150", ..., verbose = FALSE)
 }
 \arguments{
 \item{station}{chr, the station ID, must come before the ... arguments}
